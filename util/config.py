@@ -144,7 +144,7 @@ class Config(object):
         """merge dict `a` into dict `b` (non-inplace).
             values in `a` will overwrite `b`.
             copy first to avoid inplace modification
-            
+
         Args:
             a ([type]): [description]
             b ([type]): [description]
@@ -159,7 +159,7 @@ class Config(object):
         b = b.copy()
         for k, v in a.items():
             if isinstance(v, dict) and k in b and not v.pop(DELETE_KEY, False):
-            
+
                 if not isinstance(b[k], dict) and not isinstance(b[k], list):
                     # if :
                     # import ipdb; ipdb.set_trace()
@@ -178,9 +178,9 @@ class Config(object):
                         f'index {k} should be an int when input but {type(k)}'
                     )
                 b[int(k)] = Config._merge_a_into_b(v, b[int(k)])
-            else:   
+            else:
                 b[k] = v
-                
+
         return b
 
     @staticmethod
@@ -312,7 +312,7 @@ class Config(object):
         text, _ = FormatCode(text, style_config=yapf_style, verify=True)
 
         return text
-    
+
 
     def __repr__(self):
         return f'Config (path: {self.filename}): {self._cfg_dict.__repr__()}'
@@ -432,4 +432,3 @@ class DictAction(Action):
                 val = val[0]
             options[key] = val
         setattr(namespace, self.dest, options)
-

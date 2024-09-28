@@ -1,9 +1,9 @@
 import torch
-from util.misc import (NestedTensor, nested_tensor_from_tensor_list,
+from ...util.misc import (NestedTensor, nested_tensor_from_tensor_list,
                        accuracy, get_world_size, interpolate,
                        is_dist_avail_and_initialized, inverse_sigmoid)
 # from .DABDETR import sigmoid_focal_loss
-from util import box_ops
+from ...util import box_ops
 import torch.nn.functional as F
 
 
@@ -58,5 +58,3 @@ def post_process(outputs_class, outputs_coord, dn_meta, aux_loss, _set_aux_loss)
             out['aux_outputs'] = _set_aux_loss(output_known_class, output_known_coord)
         dn_meta['output_known_lbs_bboxes'] = out
     return outputs_class, outputs_coord
-
-

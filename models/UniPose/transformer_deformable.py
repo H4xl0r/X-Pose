@@ -21,7 +21,7 @@ import torch.nn.functional as F
 from torch import nn, Tensor
 from torch.nn.init import xavier_uniform_, constant_, uniform_, normal_
 
-from util.misc import inverse_sigmoid
+from ...util.misc import inverse_sigmoid
 from .ops.modules import MSDeformAttn
 
 from .utils import sigmoid_focal_loss, MLP, _get_activation_fn, gen_sineembed_for_position
@@ -49,7 +49,7 @@ class DeformableTransformer(nn.Module):
         decoder_layer = DeformableTransformerDecoderLayer(d_model, dim_feedforward,
                                                           dropout, activation,
                                                           num_feature_levels, nhead, dec_n_points)
-        self.decoder = DeformableTransformerDecoder(decoder_layer, num_decoder_layers, return_intermediate_dec, 
+        self.decoder = DeformableTransformerDecoder(decoder_layer, num_decoder_layers, return_intermediate_dec,
                                                             use_dab=use_dab, d_model=d_model, high_dim_query_update=high_dim_query_update, no_sine_embed=no_sine_embed)
 
         self.level_embed = nn.Parameter(torch.Tensor(num_feature_levels, d_model))
@@ -162,7 +162,7 @@ class DeformableTransformer(nn.Module):
             lvl_pos_embed_flatten.append(lvl_pos_embed)
             src_flatten.append(src)
             mask_flatten.append(mask)
-        src_flatten = torch.cat(src_flatten, 1)     # bs, \sum{hxw}, c 
+        src_flatten = torch.cat(src_flatten, 1)     # bs, \sum{hxw}, c
         mask_flatten = torch.cat(mask_flatten, 1)   # bs, \sum{hxw}
         lvl_pos_embed_flatten = torch.cat(lvl_pos_embed_flatten, 1)
         spatial_shapes = torch.as_tensor(spatial_shapes, dtype=torch.long, device=src_flatten.device)
@@ -191,7 +191,7 @@ class DeformableTransformer(nn.Module):
             pos_trans_out = self.pos_trans_norm(self.pos_trans(self.get_proposal_pos_embed(topk_coords_unact)))
             query_embed, tgt = torch.split(pos_trans_out, c, dim=2)
         elif self.use_dab:
-            reference_points = query_embed[..., self.d_model:].sigmoid() 
+            reference_points = query_embed[..., self.d_model:].sigmoid()
             tgt = query_embed[..., :self.d_model]
             tgt = tgt.unsqueeze(0).expand(bs, -1, -1)
             init_reference_out = reference_points
@@ -199,15 +199,15 @@ class DeformableTransformer(nn.Module):
             query_embed, tgt = torch.split(query_embed, c, dim=1)
             query_embed = query_embed.unsqueeze(0).expand(bs, -1, -1)
             tgt = tgt.unsqueeze(0).expand(bs, -1, -1)
-            reference_points = self.reference_points(query_embed).sigmoid() 
+            reference_points = self.reference_points(query_embed).sigmoid()
                 # bs, num_quires, 2
             init_reference_out = reference_points
 
         # decoder
         # import ipdb; ipdb.set_trace()
         hs, inter_references = self.decoder(tgt, reference_points, memory,
-                                            spatial_shapes, level_start_index, valid_ratios, 
-                                            query_pos=query_embed if not self.use_dab else None, 
+                                            spatial_shapes, level_start_index, valid_ratios,
+                                            query_pos=query_embed if not self.use_dab else None,
                                             src_padding_mask=mask_flatten)
 
         inter_references_out = inter_references
@@ -391,7 +391,7 @@ class DeformableTransformerDecoderLayer(nn.Module):
         tgt = self.norm3(tgt)
         return tgt
 
-    def forward_sa(self, 
+    def forward_sa(self,
                 # for tgt
                 tgt: Optional[Tensor],  # nq, bs, d_model
                 tgt_query_pos: Optional[Tensor] = None, # pos for query. MLP(Sine(pos))
@@ -435,9 +435,9 @@ class DeformableTransformerDecoderLayer(nn.Module):
             else:
                 raise NotImplementedError("Unknown decoder_sa_type {}".format(self.decoder_sa_type))
 
-        return tgt            
+        return tgt
 
-    def forward_ca(self, 
+    def forward_ca(self,
                 # for tgt
                 tgt: Optional[Tensor],  # nq, bs, d_model
                 tgt_query_pos: Optional[Tensor] = None, # pos for query. MLP(Sine(pos))
@@ -472,9 +472,9 @@ class DeformableTransformerDecoderLayer(nn.Module):
         tgt = tgt + self.dropout1(tgt2)
         tgt = self.norm1(tgt)
 
-        return tgt  
+        return tgt
 
-    def forward(self, 
+    def forward(self,
                 # for tgt
                 tgt: Optional[Tensor],  # nq, bs, d_model
                 tgt_query_pos: Optional[Tensor] = None, # pos for query. MLP(Sine(pos))
@@ -534,7 +534,7 @@ class DeformableTransformerDecoder(nn.Module):
             self.ref_point_head = MLP(2 * d_model, d_model, d_model, 2)
 
 
-    def forward(self, tgt, reference_points, src, src_spatial_shapes,       
+    def forward(self, tgt, reference_points, src, src_spatial_shapes,
                 src_level_start_index, src_valid_ratios,
                 query_pos=None, src_padding_mask=None):
         output = tgt
@@ -551,14 +551,14 @@ class DeformableTransformerDecoder(nn.Module):
             else:
                 assert reference_points.shape[-1] == 2
                 reference_points_input = reference_points[:, :, None] * src_valid_ratios[:, None]
-                
+
             if self.use_dab:
                 # import ipdb; ipdb.set_trace()
-                query_sine_embed = gen_sineembed_for_position(reference_points_input[:, :, 0, :]) # bs, nq, 256*2 
+                query_sine_embed = gen_sineembed_for_position(reference_points_input[:, :, 0, :]) # bs, nq, 256*2
                 raw_query_pos = self.ref_point_head(query_sine_embed) # bs, nq, 256
                 pos_scale = self.query_scale(output) if layer_id != 0 else 1
                 query_pos = pos_scale * raw_query_pos
-        
+
             output = layer(output, query_pos, reference_points_input, src, src_spatial_shapes, src_level_start_index, src_padding_mask)
 
             # hack implementation for iterative bounding box refinement
@@ -597,5 +597,3 @@ def build_deforamble_transformer(args):
         use_dab=args.ddetr_use_dab,
         high_dim_query_update=args.ddetr_high_dim_query_update,
         no_sine_embed=args.ddetr_no_sine_embed)
-
-

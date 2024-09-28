@@ -19,7 +19,7 @@ import os
 import torch
 from torch import nn
 
-from util.misc import NestedTensor
+from ...util.misc import NestedTensor
 
 
 class PositionEmbeddingSine(nn.Module):
@@ -145,7 +145,7 @@ def build_position_encoding(args):
     if args.position_embedding in ('v2', 'sine'):
         # TODO find a better way of exposing other arguments
         position_embedding = PositionEmbeddingSineHW(
-            N_steps, 
+            N_steps,
             temperatureH=args.pe_temperatureH,
             temperatureW=args.pe_temperatureW,
             normalize=True

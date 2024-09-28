@@ -21,7 +21,7 @@ import os
 import copy
 from typing import Optional
 
-from util.misc import inverse_sigmoid
+from ...util.misc import inverse_sigmoid
 
 import torch
 from torch import nn, Tensor
@@ -1233,5 +1233,3 @@ def build_deformable_transformer(args):
         binary_query_selection=binary_query_selection,
         ffn_extra_layernorm=ffn_extra_layernorm,
     )
-
-

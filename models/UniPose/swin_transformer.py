@@ -5,7 +5,7 @@ import torch.nn.functional as F
 import torch.utils.checkpoint as checkpoint
 import numpy as np
 from timm.models.layers import DropPath, to_2tuple, trunc_normal_
-from util.misc import NestedTensor
+from ...util.misc import NestedTensor
 
 
 
@@ -632,7 +632,7 @@ class SwinTransformer(nn.Module):
         #   [torch.Size([2, 192, 256, 256]), torch.Size([2, 384, 128, 128]), \
         #       torch.Size([2, 768, 64, 64]), torch.Size([2, 1536, 32, 32])]
 
-        # collect for nesttensors        
+        # collect for nesttensors
         outs_dict = {}
         for idx, out_i in enumerate(outs):
             m = tensor_list.mask
@@ -659,7 +659,7 @@ def build_swin_transformer(modelname, pretrain_img_size, **kw):
             depths=[ 2, 2, 6, 2 ],
             num_heads=[ 3, 6, 12, 24],
             window_size=7
-        ),        
+        ),
         'swin_B_224_22k': dict(
             embed_dim=128,
             depths=[ 2, 2, 18, 2 ],
